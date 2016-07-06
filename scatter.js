@@ -18,7 +18,7 @@ app.controller('MainCtrl', function($scope) {
               contentGenerator: function(d) {
                 return '<p>Subjectivity index: ' + d.point.subjectivity + ' ('+ d.series[0].key + ')</p>' +
                 '<p>Times RTed: ' + d.point.size + '</p>' +
-                '<p>Seniment polarity: ' + d.series[0].value + '</p>' +
+                '<p>Sentiment polarity: ' + d.series[0].value + '</p>' +
                 '<p>Tweeted text: ' + d.point.text + '</p>';
               }
             },
