@@ -5,14 +5,25 @@ app.controller('MainCtrl', function($scope) {
         chart: {
             type: 'scatterChart',
             height: 450,
-            color: d3.scale.category10().range(),
+            color: ['#00e3e5', '#29d500', '#c67800', '#bf0000'],
             scatter: {
                 onlyCircles: false
             },
             showDistX: true,
             showDistY: true,
-            tooltipContent: function(key) {
-                return '<h3>' + key + '</h3>';
+            useInteractiveGuideline: false,
+            interactive: true,
+            tooltips: true,
+            tooltip: {
+              contentGenerator: function(d) {
+                return '<p>Subjectivity index: ' + d.point.subjectivity + ' ('+ d.series[0].key + ')</p>' +
+                '<p>Times RTed: ' + d.point.size + '</p>' +
+                '<p>Seniment polarity: ' + d.series[0].value + '</p>' +
+                '<p>Tweeted text: ' + d.point.text + '</p>';
+              }
+            },
+            tooltipContent: function(key){
+              return '<p>holla</p>' + '<h1>' + key + '</h1>';
             },
             duration: 350,
             xAxis: {
@@ -22,7 +33,7 @@ app.controller('MainCtrl', function($scope) {
                 }
             },
             yAxis: {
-                axisLabel: 'Sentiment',
+                axisLabel: 'Sentiment Polarity',
                 tickFormat: function(d){
                     return d3.format('.02f')(d);
                 },
@@ -43,27 +54,24 @@ app.controller('MainCtrl', function($scope) {
 
     $scope.data = getData();
 
-    /* Random Data Generator (took from nvd3.org) */
     function getData(){
-        var data = [],
-            groups = 1,
-            points = sfHomelessData.length;
-
-        for (var i = 0; i < groups; i++) {
-            data.push({
-                key: 'Group ' + i,
-                values: []
-            });
-
-            for (var j = 0; j < points; j++) {
-                data[i].values.push({
-                    x: sfHomelessData[j][0]
-                    , y: sfHomelessData[j][1]
-                    , size: sfHomelessData[j][2]
-                    , shape: 'circle'
-                });
-            }
-        }
+        data = [0.25, 0.5, 0.75, 1.0].map(function(cutoff, idx){
+          return {
+            key: ["Highly Objective", "Slightly Objective", "Slightly Subjective", "Highly Subjective"][idx],
+            values: sfHomelessData.filter(function(d){
+              return (d[2] < cutoff) && (d[2] >= cutoff - 0.25)
+            }).map(function(d){
+              return {
+                x: d[0]
+                , y: d[1]
+                , size: d[3]
+                , shape: 'circle'
+                , subjectivity: d[2]
+                , text: d[4]
+              }
+            })
+          }
+        })
         return data;
     }
 });
