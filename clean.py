@@ -22,7 +22,7 @@ for i in range(df.shape[0]):
         'DateCreated': df.iloc[i].DateCreated
         , 'polarity': df.iloc[i].polarity
         , 'subjectivity': df.iloc[i].subjectivity
-        , 'count': 1
+        , 'count': 0
         , 'text': df.iloc[i].Text.replace("'","").replace('"',"").replace('\n', ' ').replace('\r', '')
         })
     for j in range(i + 1, df.shape[0]):
