@@ -30,9 +30,7 @@ class CloudantListener(StreamListener):
             except:
                 print tweet
                 raise
-            if tweet_data and ('homeless' in tweet_data['text'].lower() and
-                ('sf' in tweet_data['text'].lower() or
-                'san francisco' in tweet_data['text'].lower())):
+            if tweet_data and 'homeless' in tweet_data['text'].lower():
                 # insert to database
                 r = requests.post(Config.db_url, data=json.dumps(tweet_data), headers={"Content-Type":"application/json"})
                 if r.status_code == 409:
