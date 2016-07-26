@@ -15,6 +15,7 @@ class CloudantListener(StreamListener):
     """
     def on_data(self, data):
         tweet = json.loads(data)
+        tweet_data = None
         if not 'delete' in tweet:
             # truncate tweet to keep db manageable
             try:
@@ -29,34 +30,20 @@ class CloudantListener(StreamListener):
             except:
                 print tweet
                 raise
-            # normalize geodata using geonames
-            if tweet_data.get('geo'):
-                query = urlencode({
-                    "username": Config.geo_user,
-                    "lat": tweet_data['geo']['coordinates'][0],
-                    "lng": tweet_data['geo']['coordinates'][1],
-                    })
-            elif tweet_data.get('coordinates'):
-                query = urlencode({
-                    "username": Config.geo_user,
-                    "lat": tweet_data['coordinates']['coordinates'][1],
-                    "lng": tweet_data['coordinates']['coordinates'][0],
-                    })
-            if tweet_data.get('geo') or tweet_data.get('coordinates'):
-                url = '?'.join([Config.geo_url, query])
-                r = requests.get(url)
-                tweet_data.update(r.json())
-            # insert to database
-            r = requests.post(Config.db_url, data=json.dumps(tweet_data), headers={"Content-Type":"application/json"})
-            if r.status_code == 409:
-                # if revision conflict, update _rev
-                # this will happen: https://dev.twitter.com/docs/streaming-apis/processing#Duplicate_messages
-                r = requests.get('/'.join([Config.db_url, str(tweet_data['_id'])]))
-                tweet_data['_rev'] = r.json()['_rev']
+            if tweet_data and ('homeless' in tweet_data['text'].lower() and
+                ('sf' in tweet_data['text'].lower() or
+                'san francisco' in tweet_data['text'].lower())):
+                # insert to database
                 r = requests.post(Config.db_url, data=json.dumps(tweet_data), headers={"Content-Type":"application/json"})
-            if r.status_code not in [200, 201, 202]:
-                # if we failed, even after catching 409, say so
-                print r.status_code, r.json()
+                if r.status_code == 409:
+                    # if revision conflict, update _rev
+                    # this will happen: https://dev.twitter.com/docs/streaming-apis/processing#Duplicate_messages
+                    r = requests.get('/'.join([Config.db_url, str(tweet_data['_id'])]))
+                    tweet_data['_rev'] = r.json()['_rev']
+                    r = requests.post(Config.db_url, data=json.dumps(tweet_data), headers={"Content-Type":"application/json"})
+                if r.status_code not in [200, 201, 202]:
+                    # if we failed, even after catching 409, say so
+                    print r.status_code, r.json()
         return True
 
     def on_error(self, status):
