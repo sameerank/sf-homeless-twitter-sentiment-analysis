@@ -14,7 +14,7 @@ def count():
 @app.route('/tweets')
 def tweets():
     url = '/'.join([Config.db_url, '_find'])
-    payload = "{\n  \"selector\": {\n    \"_id\": {\n      \"$gt\": 0\n    }\n  },\n  \"fields\": [\n    \"_id\",\n    \"created_at\",\n    \"text\"\n  ]\n}"
+    payload = "{\n  \"selector\": {\n    \"_id\": {\n      \"$gt\": 0\n    }\n  },\n  \"fields\": [\n    \"_id\",\n    \"created_at\",\n    \"geo\",\n    \"text\"\n  ]\n}"
     headers = {'content-type': "application/json"}
     r = requests.post(url, data=payload, headers=headers)
     return flask.jsonify(r.json())
