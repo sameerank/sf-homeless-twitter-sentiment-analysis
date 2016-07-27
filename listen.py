@@ -30,18 +30,17 @@ class CloudantListener(StreamListener):
             except:
                 print tweet
                 raise
-            if tweet_data and 'homeless' in tweet_data['text'].lower():
-                # insert to database
+            # insert to database
+            r = requests.post(Config.db_url, data=json.dumps(tweet_data), headers={"Content-Type":"application/json"})
+            if r.status_code == 409:
+                # if revision conflict, update _rev
+                # this will happen: https://dev.twitter.com/docs/streaming-apis/processing#Duplicate_messages
+                r = requests.get('/'.join([Config.db_url, str(tweet_data['_id'])]))
+                tweet_data['_rev'] = r.json()['_rev']
                 r = requests.post(Config.db_url, data=json.dumps(tweet_data), headers={"Content-Type":"application/json"})
-                if r.status_code == 409:
-                    # if revision conflict, update _rev
-                    # this will happen: https://dev.twitter.com/docs/streaming-apis/processing#Duplicate_messages
-                    r = requests.get('/'.join([Config.db_url, str(tweet_data['_id'])]))
-                    tweet_data['_rev'] = r.json()['_rev']
-                    r = requests.post(Config.db_url, data=json.dumps(tweet_data), headers={"Content-Type":"application/json"})
-                if r.status_code not in [200, 201, 202]:
-                    # if we failed, even after catching 409, say so
-                    print r.status_code, r.json()
+            if r.status_code not in [200, 201, 202]:
+                # if we failed, even after catching 409, say so
+                print r.status_code, r.json()
         return True
 
     def on_error(self, status):
@@ -53,6 +52,7 @@ def listen():
     auth.set_access_token(Config.access_token, Config.access_token_secret)
 
     stream = Stream(auth, l, timeout=36000000)
+    stream.filter(track=["sf homeless, san francisco homeless, sanfrancisco homeless"])
     def attempt_connect(wait=1):
         try:
             stream.sample()
