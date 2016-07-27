@@ -15,6 +15,7 @@ def count():
 def index():
     url = '/'.join([Config.db_url, '_all_docs']) + '?limit=0'
     r = requests.get(url)
+    import pdb; pdb.set_trace()
     count = r.json()['total_rows']
     return flask.render_template('index.html', count=count)
 

@@ -6,23 +6,23 @@ Based on the repo at [flask_listen](https://github.com/garbados/flask_listen). F
 
 You need an account on [Cloudant](https://cloudant.com/) and [Twitter](https://dev.twitter.com/). Per Heroku's [configuration recommendations](https://devcenter.heroku.com/articles/config-vars), set the following keys in a .env file:
 
-  * CLOUDANT_USER: your Cloudant username
-  * CLOUDANT_PASS: your Cloudant password
-  * CLOUDANT_DB: the database to dump tweets into
-  * TWITTER_CONSUMER_KEY
-  * TWITTER_CONSUMER_SECRET
-  * TWITTER_ACCESS_KEY
-  * TWITTER_ACCESS_SECRET
+    CLOUDANT_USER=...
+    CLOUDANT_PASS=...
+    CLOUDANT_DB=...
+    TWITTER_CONSUMER_KEY=...
+    TWITTER_CONSUMER_SECRET=...
+    TWITTER_ACCESS_KEY=...
+    TWITTER_ACCESS_SECRET=...
 
 To get this onto Heroku:
 
-    heroku create
+    heroku create {name of Heroku instance}
     heroku config:push
     git push heroku master
 
 This might help: http://stackoverflow.com/questions/27899517/heroku-configpush-not-adding-environment-variables
 
-That should yield a URL where your app lives. To start the listener, do this:
+Then, to start the listener, enter this:
 
     heroku ps:scale worker=1
 
