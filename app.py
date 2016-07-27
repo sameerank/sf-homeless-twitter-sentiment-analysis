@@ -11,11 +11,18 @@ def count():
   r = requests.get(url)
   return flask.jsonify({"count": r.json()['total_rows']})
 
+@app.route('/tweets')
+def tweets():
+    url = '/'.join([Config.db_url, '_find'])
+    payload = "{\n  \"selector\": {\n    \"_id\": {\n      \"$gt\": 0\n    }\n  },\n  \"fields\": [\n    \"_id\",\n    \"created_at\",\n    \"text\"\n  ]\n}"
+    headers = {'content-type': "application/json"}
+    r = requests.post(url, data=payload, headers=headers)
+    return flask.jsonify(r.json()["docs"])
+
 @app.route('/')
 def index():
     url = '/'.join([Config.db_url, '_all_docs']) + '?limit=0'
     r = requests.get(url)
-    import pdb; pdb.set_trace()
     count = r.json()['total_rows']
     return flask.render_template('index.html', count=count)
 
