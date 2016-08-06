@@ -27,3 +27,5 @@ Then, to start the listener, enter this:
     heroku ps:scale worker=1
 
 The worker runs listen.py to stream tweets into Cloudant.
+
+To get TextBlob working on Heroku with Flask, the answer at the bottom of the [page](https://github.com/sloria/TextBlob/issues/59) worked great!
