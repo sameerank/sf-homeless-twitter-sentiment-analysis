@@ -9,3 +9,4 @@ tweepy==2.1
 wsgiref==0.1.2
 numpy==1.11.1
 pandas==0.18.1
+textblob==0.12.0

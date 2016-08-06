@@ -3,6 +3,7 @@ import requests
 import os
 import json
 import pandas as pd
+from textblob import TextBlob
 from config import Config
 
 app = flask.Flask(__name__)
@@ -29,6 +30,8 @@ def processed():
     r = requests.post(url, data=payload, headers=headers)
     rdata = r.json()['docs']
     df = pd.DataFrame(map(lambda rd: {'id': rd['_id'], 'created_at': rd['created_at'], 'text': rd['text']}, rdata))
+    df['polarity'] = df.apply(lambda x: TextBlob(x['text']).sentiment.polarity, axis=1)
+    df['subjectivity'] = df.apply(lambda x: TextBlob(x['text']).sentiment.subjectivity, axis=1)
     return df.transpose().to_json()
 
 @app.route('/')
