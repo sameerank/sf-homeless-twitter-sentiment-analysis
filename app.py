@@ -21,7 +21,7 @@ def tweets():
     return flask.jsonify(r.json())
 
 @app.route('/processed')
-def tweets():
+def processed():
     df = pd.read_json('http://sfhomeless.herokuapp.com/tweets')
     return flask.jsonify(df.to_json())
 
