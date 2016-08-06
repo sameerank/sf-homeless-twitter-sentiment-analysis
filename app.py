@@ -29,7 +29,7 @@ def processed():
     r = requests.post(url, data=payload, headers=headers)
     rdata = r.json()['docs']
     df = pd.DataFrame(map(lambda rd: {'id': rd['_id'], 'created_at': rd['created_at'], 'text': rd['text']}, rdata))
-    return json.dump(df.transpose().to_json())
+    return json.dumps(df.transpose().to_json())
 
 @app.route('/')
 def index():
