@@ -22,7 +22,11 @@ def tweets():
 
 @app.route('/processed')
 def processed():
-    df = pd.read_json('http://sfhomeless.herokuapp.com/tweets')
+    url = '/'.join([Config.db_url, '_find'])
+    payload = "{\n  \"selector\": {\n    \"_id\": {\n      \"$gt\": 0\n    }\n  },\n  \"fields\": [\n    \"_id\",\n    \"created_at\",\n    \"geo\",\n    \"text\"\n  ]\n}"
+    headers = {'content-type': "application/json"}
+    r = requests.post(url, data=payload, headers=headers)
+    df = pd.read_json(r.json())
     return flask.jsonify(df.to_json())
 
 @app.route('/')
