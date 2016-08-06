@@ -26,7 +26,9 @@ def processed():
     payload = "{\n  \"selector\": {\n    \"_id\": {\n      \"$gt\": 0\n    }\n  },\n  \"fields\": [\n    \"_id\",\n    \"created_at\",\n    \"geo\",\n    \"text\"\n  ]\n}"
     headers = {'content-type': "application/json"}
     r = requests.post(url, data=payload, headers=headers)
-    return flask.jsonify(r.json())
+    rdata = r.json()['docs']
+    df = pd.DataFrame(map(lambda d: {'id': d['_id']}, rdata))
+    return flask.jsonify(df.to_json())
 
 @app.route('/')
 def index():
