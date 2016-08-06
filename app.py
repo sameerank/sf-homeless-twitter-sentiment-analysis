@@ -22,13 +22,10 @@ def tweets():
 
 @app.route('/processed')
 def processed():
-    url = '/'.join([Config.db_url, '_find'])
-    payload = "{\n  \"selector\": {\n    \"_id\": {\n      \"$gt\": 0\n    }\n  },\n  \"fields\": [\n    \"_id\",\n    \"created_at\",\n    \"geo\",\n    \"text\"\n  ]\n}"
-    headers = {'content-type': "application/json"}
-    r = requests.post(url, data=payload, headers=headers)
+    r = requests.get('http://sfhomeless.herokuapp.com/tweets')
     rdata = r.json()['docs']
     df = pd.DataFrame(map(lambda d: {'id': d['_id']}, rdata))
-    return flask.jsonify(df.to_json())
+    return df.to_json()
 
 @app.route('/')
 def index():
