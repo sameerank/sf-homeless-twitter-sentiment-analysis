@@ -27,7 +27,7 @@ def processed():
     headers = {'content-type': "application/json"}
     r = requests.post(url, data=payload, headers=headers)
     df = pd.read_json(r.json())
-    return df.to_json()
+    return "hello world"
 
 @app.route('/')
 def index():
