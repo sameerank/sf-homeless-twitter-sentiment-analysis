@@ -2,8 +2,10 @@ import flask
 import requests
 import os
 import json
+import tweepy
 import pandas as pd
 from textblob import TextBlob
+from dateutil.parser import parse
 from config import Config
 
 app = flask.Flask(__name__)
@@ -32,6 +34,8 @@ def processed():
     df = pd.DataFrame(map(lambda rd: {'id': rd['_id'], 'created_at': rd['created_at'], 'text': rd['text']}, rdata))
     df['polarity'] = df.apply(lambda x: TextBlob(x['text']).sentiment.polarity, axis=1)
     df['subjectivity'] = df.apply(lambda x: TextBlob(x['text']).sentiment.subjectivity, axis=1)
+    df['created_at'] = df.apply(lambda x: parse(x['created_at']), axis=1)
+    df.sort_values(by=['created_at'], inplace=True)
     return df.transpose().to_json()
 
 @app.route('/')
