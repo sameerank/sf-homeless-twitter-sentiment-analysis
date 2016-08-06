@@ -1,6 +1,7 @@
 import flask
 import requests
 import os
+import pandas as pd
 from config import Config
 
 app = flask.Flask(__name__)
@@ -18,6 +19,11 @@ def tweets():
     headers = {'content-type': "application/json"}
     r = requests.post(url, data=payload, headers=headers)
     return flask.jsonify(r.json())
+
+@app.route('/processed')
+def tweets():
+    df = pd.read_json('http://sfhomeless.herokuapp.com/tweets')
+    return flask.jsonify(df.to_json())
 
 @app.route('/')
 def index():
