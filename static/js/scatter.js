@@ -1,6 +1,9 @@
 var app = angular.module('SFHomelessnessApp', ['nvd3']);
 
-app.controller('MainCtrl', function($scope) {
+app.controller('MainCtrl', function($scope, $http) {
+
+    window.MY_SCOPE = $scope;
+
     $scope.options = {
         chart: {
             type: 'scatterChart',
@@ -53,8 +56,22 @@ app.controller('MainCtrl', function($scope) {
     };
 
     $scope.data = getData();
+    $scope.tweets = [];
 
     function getData(){
+
+        $http({
+          url: "http://sfhomeless.herokuapp.com/processed",
+          dataType: 'jsonp',
+          method: "GET",
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8'
+          }
+        }).success(function(response){
+          $scope.data = response.data;
+        });
+
         data = [0.25, 0.5, 0.75, 1.0].map(function(cutoff, idx){
           return {
             key: ["Highly Objective", "Slightly Objective", "Slightly Subjective", "Highly Subjective"][idx],
