@@ -2,8 +2,6 @@ var app = angular.module('SFHomelessnessApp', ['nvd3']);
 
 app.controller('MainCtrl', function($scope, $http) {
 
-    window.MY_SCOPE = $scope;
-
     $scope.options = {
         chart: {
             type: 'scatterChart',
@@ -12,6 +10,7 @@ app.controller('MainCtrl', function($scope, $http) {
             scatter: {
                 onlyCircles: false
             },
+            noData: 'Loading data and calculating stuff ... This will take about a minute.',
             showDistX: true,
             showDistY: true,
             useInteractiveGuideline: false,
@@ -20,15 +19,16 @@ app.controller('MainCtrl', function($scope, $http) {
             tooltip: {
               contentGenerator: function(d) {
                 return '<p>Subjectivity index: ' + d.point.subjectivity + ' ('+ d.series[0].key + ')</p>' +
+                '<p>Seen before: ' + d.point.size + ' times</p>' +
                 '<p>Sentiment polarity: ' + d.series[0].value + '</p>' +
                 '<p>Tweeted text: ' + d.point.text + '</p>';
               }
             },
             duration: 350,
             xAxis: {
-                axisLabel: 'Datetime',
+                axisLabel: 'Date',
                 tickFormat: function(date){
-                    return d3.time.format('%b %e %Y')(new Date(date));
+                    return d3.time.format('%b %e, %Y')(new Date(date));
                 }
             },
             yAxis: {
@@ -51,46 +51,54 @@ app.controller('MainCtrl', function($scope, $http) {
         }
     };
 
-    getData();
     $scope.data = [];
+    getData();
 
     function getData(){
         var tweets;
         var processedData = [];
 
-        $http.get("http://sfhomeless.herokuapp.com/processed")
+        $http.get("/processed")
         .then(function(response){
             tweets = response.data;
-            i = 0
+            var i = 0
             while ( tweets[i] ) {
-              processedData.push([
-                new Date(tweets[i].created_at),
-                tweets[i].polarity,
-                tweets[i].subjectivity,
-                tweets[i].text,
-             ]);
-              i += 1;
+                var times_seen = 0;
+                for (var j = 0; j < i; j++) {
+                    var l = new Levenshtein( tweets[i].text, tweets[j].text )
+                    var fractionalDistance = l.distance / Math.max(tweets[i].text.length, tweets[j].text.length)
+                    if (fractionalDistance < 0.5) {
+                        times_seen += 1;
+                    }
+                }
+
+                processedData.push([
+                    new Date(tweets[i].created_at),
+                    tweets[i].polarity,
+                    tweets[i].subjectivity,
+                    times_seen,
+                    tweets[i].text,
+                ]);
+                i += 1;
+                $scope.tweetsAnalyzed = i;
             }
             $scope.data = [0.25, 0.5, 0.75, 1.0].map(function(cutoff, idx){
-              return {
-                key: ["Highly Objective", "Slightly Objective", "Slightly Subjective", "Highly Subjective"][idx],
-                values: processedData.filter(function(d){
-                  return (d[2] < cutoff) && (d[2] >= cutoff - 0.25)
-                }).map(function(d){
-                  return {
-                    x: d[0]
-                    , y: d[1]
-                    , size: 1
-                    , shape: 'circle'
-                    , subjectivity: d[2]
-                    , text: d[3]
-                  }
-                })
-              }
-            }
-          )
-        }
-      );
+                return {
+                    key: ["Highly Objective", "Slightly Objective", "Slightly Subjective", "Highly Subjective"][idx],
+                    values: processedData.filter(function(d){
+                        return (d[2] < cutoff) && (d[2] >= cutoff - 0.25)
+                    }).map(function(d){
+                        return {
+                          x: d[0]
+                          , y: d[1]
+                          , size: d[3]
+                          , shape: 'circle'
+                          , subjectivity: d[2]
+                          , text: d[4]
+                        }
+                    })
+                }
+            })
+        });
     }
-  }
-);
+});
