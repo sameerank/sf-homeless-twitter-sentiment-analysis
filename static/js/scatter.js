@@ -20,19 +20,15 @@ app.controller('MainCtrl', function($scope, $http) {
             tooltip: {
               contentGenerator: function(d) {
                 return '<p>Subjectivity index: ' + d.point.subjectivity + ' ('+ d.series[0].key + ')</p>' +
-                '<p>Times RTed: ' + d.point.size + '</p>' +
                 '<p>Sentiment polarity: ' + d.series[0].value + '</p>' +
                 '<p>Tweeted text: ' + d.point.text + '</p>';
               }
-            },
-            tooltipContent: function(key){
-              return '<p>holla</p>' + '<h1>' + key + '</h1>';
             },
             duration: 350,
             xAxis: {
                 axisLabel: 'Datetime',
                 tickFormat: function(date){
-                    return d3.time.format('%H:%M:%S')(new Date(date));
+                    return d3.time.format('%b %e %Y')(new Date(date));
                 }
             },
             yAxis: {
@@ -55,40 +51,46 @@ app.controller('MainCtrl', function($scope, $http) {
         }
     };
 
-    $scope.data = getData();
-    $scope.tweets = [];
+    getData();
+    $scope.data = [];
 
     function getData(){
+        var tweets;
+        var processedData = [];
 
-        $http({
-          url: "http://sfhomeless.herokuapp.com/processed",
-          dataType: 'jsonp',
-          method: "GET",
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8'
-          }
-        }).success(function(response){
-          $scope.data = response.data;
-        });
-
-        data = [0.25, 0.5, 0.75, 1.0].map(function(cutoff, idx){
-          return {
-            key: ["Highly Objective", "Slightly Objective", "Slightly Subjective", "Highly Subjective"][idx],
-            values: sfHomelessData.filter(function(d){
-              return (d[2] < cutoff) && (d[2] >= cutoff - 0.25)
-            }).map(function(d){
+        $http.get("http://sfhomeless.herokuapp.com/processed")
+        .then(function(response){
+            tweets = response.data;
+            i = 0
+            while ( tweets[i] ) {
+              processedData.push([
+                new Date(tweets[i].created_at),
+                tweets[i].polarity,
+                tweets[i].subjectivity,
+                tweets[i].text,
+             ]);
+              i += 1;
+            }
+            $scope.data = [0.25, 0.5, 0.75, 1.0].map(function(cutoff, idx){
               return {
-                x: d[0]
-                , y: d[1]
-                , size: d[3]
-                , shape: 'circle'
-                , subjectivity: d[2]
-                , text: d[4]
+                key: ["Highly Objective", "Slightly Objective", "Slightly Subjective", "Highly Subjective"][idx],
+                values: processedData.filter(function(d){
+                  return (d[2] < cutoff) && (d[2] >= cutoff - 0.25)
+                }).map(function(d){
+                  return {
+                    x: d[0]
+                    , y: d[1]
+                    , size: 1
+                    , shape: 'circle'
+                    , subjectivity: d[2]
+                    , text: d[3]
+                  }
+                })
               }
-            })
-          }
-        })
-        return data;
+            }
+          )
+        }
+      );
     }
-});
+  }
+);

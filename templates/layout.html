@@ -2,11 +2,13 @@
 <head>
   <title>NLTK Listener</title>
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bower_components/nvd3/build/nv.d3.min.css') }}"/>
 </head>
 <body ng-controller="MainCtrl">
-  <nvd3 options="options" data="data" config="config"></nvd3>
   {% block content %}
   {% endblock %}
+  <nvd3 options="options" data="data" config="config"></nvd3>
+
   <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='js/app.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='bower_components/angular/angular.min.js') }}"></script>
