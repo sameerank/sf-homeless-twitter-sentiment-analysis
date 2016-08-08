@@ -1,6 +1,6 @@
 var app = angular.module('SFHomelessnessApp', ['nvd3']);
 
-app.controller('MainCtrl', function($scope, $http) {
+app.controller('MainCtrl', function($scope, $http, $timeout) {
 
     $scope.options = {
         chart: {
@@ -19,7 +19,7 @@ app.controller('MainCtrl', function($scope, $http) {
             tooltip: {
               contentGenerator: function(d) {
                 return '<p>Subjectivity index: ' + d.point.subjectivity + ' ('+ d.series[0].key + ')</p>' +
-                '<p>Seen before: ' + d.point.size + ' times</p>' +
+                '<p>Count of previous similar tweets: ' + d.point.size + '</p>' +
                 '<p>Sentiment polarity: ' + d.series[0].value + '</p>' +
                 '<p>Tweeted text: ' + d.point.text + '</p>';
               }
@@ -52,6 +52,18 @@ app.controller('MainCtrl', function($scope, $http) {
     };
 
     $scope.data = [];
+    $scope.countingSimilarTweets = false;
+
+    $scope.testTest = "5";
+
+    $scope.$watch(function(scope){return scope.countingSimilarTweets;}, function(newValue, oldValue) {
+            if (newValue) {
+                // Not sure if this is the best way, but pausing before changing the data seems to give d3 a change to plot the data
+                $timeout(countSeen, 500);
+            }
+        }
+    );
+
     getData();
 
     function getData(){
@@ -62,42 +74,18 @@ app.controller('MainCtrl', function($scope, $http) {
         .then(function(response){
             tweets = response.data;
             var i = 0
-            // Memoization to speed up this computation
-            var timesSeen = {};
-            timesSeen[tweets[i].text] = 0;
-            var seenTweetsText = Object.keys(timesSeen);
             while ( tweets[i] ) {
-                var notSeen = true;
-                for (var j = 0; j < seenTweetsText.length; j++) {
-                    var l = new Levenshtein( tweets[i].text, seenTweetsText[j] )
-                    var fractionalDistance = l.distance / Math.max(tweets[i].text.length, seenTweetsText[j].length)
-                    if (fractionalDistance < 0.5) {
-                        timesSeen[seenTweetsText[j]] += 1;
-                        notSeen = false;
-                        processedData.push([
-                            new Date(tweets[i].created_at),
-                            tweets[i].polarity,
-                            tweets[i].subjectivity,
-                            timesSeen[seenTweetsText[j]],
-                            tweets[i].text,
-                        ]);
-                        break;
-                    }
-                }
 
-                if (notSeen) {
-                    timesSeen[tweets[i].text] = 0;
-                    seenTweetsText = Object.keys(timesSeen);
-                    processedData.push([
-                        new Date(tweets[i].created_at),
-                        tweets[i].polarity,
-                        tweets[i].subjectivity,
-                        timesSeen[tweets[i].text],
-                        tweets[i].text,
-                    ]);
-                }
+                processedData.push([
+                    new Date(tweets[i].created_at),
+                    tweets[i].polarity,
+                    tweets[i].subjectivity,
+                    NaN,
+                    tweets[i].text,
+                ]);
 
                 i += 1;
+
             }
             $scope.data = [0.25, 0.5, 0.75, 1.0].map(function(cutoff, idx){
                 return {
@@ -115,7 +103,40 @@ app.controller('MainCtrl', function($scope, $http) {
                         }
                     })
                 }
+            });
+
+            $scope.countingSimilarTweets = true;
+        })
+    }
+
+    function countSeen(){
+
+        // Memoization to speed up this computation
+        var timesSeen = {};
+        timesSeen[$scope.data[0].values[0].text] = 0;
+        var seenTweetsText = Object.keys(timesSeen);
+
+        $scope.data.forEach(function(category){
+            category.values.forEach(function(point){
+                var notSeen = true;
+                for (var j = 0; j < seenTweetsText.length; j++) {
+                    var l = new Levenshtein( point.text, seenTweetsText[j] )
+                    var fractionalDistance = l.distance / Math.max(point.text.length, seenTweetsText[j].length)
+                    if (fractionalDistance < 0.5) {
+                        timesSeen[seenTweetsText[j]] += 1;
+                        notSeen = false;
+                        point.size = timesSeen[seenTweetsText[j]];
+                        break;
+                    }
+                }
+                if (notSeen) {
+                    timesSeen[point.text] = 0;
+                    seenTweetsText = Object.keys(timesSeen);
+                    point.size = timesSeen[point.text];
+                }
             })
-        });
+        })
+
+        $scope.countingSimilarTweets = false;
     }
 });

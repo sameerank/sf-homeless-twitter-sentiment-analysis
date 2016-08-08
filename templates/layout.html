@@ -3,12 +3,20 @@
   <title>San Francisco, Homelessness, Twitter, Sentiment Analysis</title>
   <script>document.write('<base href="' + document.location + '" />');</script>
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bower_components/font-awesome/css/font-awesome.min.css') }}">
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bower_components/nvd3/build/nv.d3.min.css') }}"/>
 </head>
 <body ng-controller="MainCtrl">
+  <span>{{ testTest }} </span>
   {% block content %}
   {% endblock %}
-  <nvd3 options="options" data="data" config="config"></nvd3>
+  <br></br>
+  <div ng-if="countingSimilarTweets" style="text-align: center;">
+    <p>Not ready yet. We're counting similar tweets. This might take up to a minute ... </p>
+    <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+    <span class="sr-only">Loading...</span>
+  </div>
+  <nvd3 options="options" data="data" config="config" api="api"></nvd3>
 
   <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='js/app.js') }}"></script>
