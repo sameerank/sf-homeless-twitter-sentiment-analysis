@@ -10,7 +10,7 @@ app.controller('MainCtrl', function($scope, $http, $timeout) {
             scatter: {
                 onlyCircles: false
             },
-            noData: 'Loading data and calculating stuff ... This will take about a minute.',
+            noData: 'Loading data ...',
             showDistX: true,
             showDistY: true,
             useInteractiveGuideline: false,
