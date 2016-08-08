@@ -62,21 +62,31 @@ app.controller('MainCtrl', function($scope, $http) {
         .then(function(response){
             tweets = response.data;
             var i = 0
+            // Memoization to speed up this computation
+            var timesSeen = {};
+            timesSeen[tweets[i].text] = 0;
+            var seenTweetsText = Object.keys(timesSeen);
             while ( tweets[i] ) {
-                var times_seen = 0;
-                for (var j = 0; j < i; j++) {
-                    var l = new Levenshtein( tweets[i].text, tweets[j].text )
+                var notSeen = true;
+                for (var j = 0; j < seenTweetsText.length; j++) {
+                    var l = new Levenshtein( tweets[i].text, seenTweetsText[j] )
                     var fractionalDistance = l.distance / Math.max(tweets[i].text.length, tweets[j].text.length)
                     if (fractionalDistance < 0.5) {
-                        times_seen += 1;
+                        timesSeen[seenTweetsText[j]] += 1;
+                        notSeen = false;
                     }
+                }
+
+                if (notSeen) {
+                    timesSeen[tweets[i].text] = 0;
+                    seenTweetsText = Object.keys(timesSeen);
                 }
 
                 processedData.push([
                     new Date(tweets[i].created_at),
                     tweets[i].polarity,
                     tweets[i].subjectivity,
-                    times_seen,
+                    timesSeen[tweets[i].text],
                     tweets[i].text,
                 ]);
                 i += 1;
