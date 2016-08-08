@@ -98,7 +98,6 @@ app.controller('MainCtrl', function($scope, $http) {
                 }
 
                 i += 1;
-                $scope.tweetsAnalyzed = i;
             }
             $scope.data = [0.25, 0.5, 0.75, 1.0].map(function(cutoff, idx){
                 return {
