@@ -79,7 +79,7 @@ app.controller('MainCtrl', ['$scope', '$rootScope', '$http', '$timeout', functio
             var i = 0;
             while ( tweets[i] ) {
 
-                processedData.push([
+                processedData.unshift([
                     new Date(tweets[i].created_at),
                     tweets[i].polarity,
                     tweets[i].subjectivity,
