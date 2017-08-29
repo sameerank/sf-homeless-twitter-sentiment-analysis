@@ -1,6 +1,13 @@
 var app = angular.module('SFHomelessnessApp', ['nvd3']);
 
-app.controller('MainCtrl', function($scope, $http, $timeout) {
+app.controller('MainCtrl', ['$scope', '$rootScope', '$http', '$timeout', function($scope, $rootScope, $http, $timeout) {
+
+    $scope.limit_options = [100, 200, 300, 400];
+    $scope.selected_limit = $scope.limit_options[0];
+    $scope.update_with_limit = function () {
+        getData($scope.selected_limit);
+    };
+    $scope.update_with_limit();
 
     $scope.options = {
         chart: {
@@ -54,26 +61,22 @@ app.controller('MainCtrl', function($scope, $http, $timeout) {
     $scope.data = [];
     $scope.countingSimilarTweets = false;
 
-    $scope.testTest = "5";
-
     $scope.$watch(function(scope){return scope.countingSimilarTweets;}, function(newValue, oldValue) {
             if (newValue) {
-                // Not sure if this is the best way, but pausing before changing the data seems to give d3 a change to plot the data
+                // Not sure if this is the best way, but pausing before changing the data seems to give d3 a chance to plot the data
                 $timeout(countSeen, 500);
             }
         }
     );
 
-    getData();
-
-    function getData(){
+    function getData(requested_limit){
         var tweets;
         var processedData = [];
 
-        $http.get("/processed")
+        $http.get("/processed", {params: {limit: requested_limit}})
         .then(function(response){
             tweets = response.data;
-            var i = 0
+            var i = 0;
             while ( tweets[i] ) {
 
                 processedData.push([
@@ -81,7 +84,7 @@ app.controller('MainCtrl', function($scope, $http, $timeout) {
                     tweets[i].polarity,
                     tweets[i].subjectivity,
                     NaN,
-                    tweets[i].text,
+                    tweets[i].text
                 ]);
 
                 i += 1;
@@ -94,12 +97,12 @@ app.controller('MainCtrl', function($scope, $http, $timeout) {
                         return (d[2] < cutoff) && (d[2] >= cutoff - 0.25)
                     }).map(function(d){
                         return {
-                          x: d[0]
-                          , y: d[1]
-                          , size: d[3]
-                          , shape: 'circle'
-                          , subjectivity: d[2]
-                          , text: d[4]
+                            x: d[0],
+                            y: d[1],
+                            size: d[3],
+                            shape: 'circle',
+                            subjectivity: d[2],
+                            text: d[4]
                         }
                     })
                 }
@@ -139,4 +142,4 @@ app.controller('MainCtrl', function($scope, $http, $timeout) {
 
         $scope.countingSimilarTweets = false;
     }
-});
+}]);

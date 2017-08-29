@@ -2,7 +2,6 @@ import flask
 import requests
 import os
 import json
-import tweepy
 import pandas as pd
 from textblob import TextBlob
 from dateutil.parser import parse
@@ -12,6 +11,25 @@ from flask import make_response, request, current_app
 from functools import update_wrapper
 
 app = flask.Flask(__name__)
+
+BASE_QUERY = {
+    "selector": {
+        "_id": {
+            "$gt": 0
+        }
+    },
+    "fields": [
+        "_id",
+        "created_at",
+        "geo",
+        "text"
+    ],
+    "sort": [
+        {
+            "_id": "desc"
+        }
+    ]
+}
 
 
 def crossdomain(origin=None, methods=None, headers=None,
@@ -67,7 +85,7 @@ def count():
 @crossdomain(origin='*')
 def tweets():
     url = '/'.join([Config.db_url, '_find'])
-    payload = "{\n  \"selector\": {\n    \"_id\": {\n      \"$gt\": 0\n    }\n  },\n  \"fields\": [\n    \"_id\",\n    \"created_at\",\n    \"geo\",\n    \"text\"\n  ]\n}"
+    payload = json.dumps(BASE_QUERY)
     headers = {'content-type': "application/json"}
     r = requests.post(url, data=payload, headers=headers)
     return flask.jsonify(r.json())
@@ -75,12 +93,17 @@ def tweets():
 @app.route('/processed')
 @crossdomain(origin='*')
 def processed():
+    requested_limit = int(request.args.get('limit', 100))
     url = '/'.join([Config.db_url, '_find'])
-    payload = "{\n  \"selector\": {\n    \"_id\": {\n      \"$gt\": 0\n    }\n  },\n  \"fields\": [\n    \"_id\",\n    \"created_at\",\n    \"geo\",\n    \"text\"\n  ],\n  \"limit\": 200\n}"
+    query = {
+        "limit": requested_limit
+    }
+    query.update(BASE_QUERY)
+    payload = json.dumps(query)
     headers = {'content-type': "application/json"}
-    r = requests.post(url, data=payload, headers=headers)
-    rdata = r.json()['docs']
-    df = pd.DataFrame(map(lambda rd: {'id': rd['_id'], 'created_at': rd['created_at'], 'text': rd['text']}, rdata))
+    req = requests.post(url, data=payload, headers=headers)
+    req_data = req.json()['docs']
+    df = pd.DataFrame(map(lambda rd: {'id': rd['_id'], 'created_at': rd['created_at'], 'text': rd['text']}, req_data))
     df['polarity'] = df.apply(lambda x: TextBlob(x['text']).sentiment.polarity, axis=1)
     df['subjectivity'] = df.apply(lambda x: TextBlob(x['text']).sentiment.subjectivity, axis=1)
     df['created_at'] = df.apply(lambda x: parse(x['created_at']), axis=1)

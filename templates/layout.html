@@ -7,16 +7,22 @@
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bower_components/nvd3/build/nv.d3.min.css') }}"/>
 </head>
 <body ng-controller="MainCtrl">
-  <span>{{ testTest }} </span>
   {% block content %}
   {% endblock %}
   <br></br>
   <div ng-if="countingSimilarTweets" style="text-align: center;">
-    <p>Not ready yet! Identifying similar tweets based on their Levenshtein distances. This might take up to a minute ... </p>
-    <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
-    <span class="sr-only">Loading...</span>
+      <p>Not ready yet! Identifying similar tweets based on their Levenshtein distances. This might take up to a minute ... </p>
+      <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      <span class="sr-only">Loading...</span>
   </div>
   <nvd3 options="options" data="data" config="config" api="api"></nvd3>
+  <div style="text-align: center;">
+      Select number of most recent tweets to display &nbsp;
+      <select ng-change="update_with_limit()"
+              ng-model="selected_limit"
+              ng-options="limit_option as limit_option for limit_option in limit_options">
+      </select>
+  </div>
 
   <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='js/app.js') }}"></script>
